@@ -22,8 +22,8 @@ class Outlook():
                 self.imap = imaplib.IMAP4_SSL(config.imap_server,config.imap_port)
                 r, d = self.imap.login(username, password)
                 assert r == 'OK', 'login failed: %s' % str (r)
-                print(" > Signed in as %s" % self.username, d)
-                return
+                # print(" > Signed in as %s" % self.username, d)
+                return True
             except Exception as err:
                 print(" > Sign in error: %s" % str(err))
                 login_attempts = login_attempts + 1
@@ -97,7 +97,7 @@ class Outlook():
 
     def allIdsSince(self, days):
         r, d = self.imap.search(None, '(SINCE "'+self.since_date(days)+'")', 'ALL')
-        list = d[0].split(' ')
+        list = d[0].split()
         return list
 
     def allIdsToday(self):
@@ -105,7 +105,7 @@ class Outlook():
 
     def readIdsSince(self, days):
         r, d = self.imap.search(None, '(SINCE "'+self.date_since(days)+'")', 'SEEN')
-        list = d[0].split(' ')
+        list = d[0].split()
         return list
 
     def readIdsToday(self):
@@ -113,7 +113,7 @@ class Outlook():
 
     def unreadIdsSince(self, days):
         r, d = self.imap.search(None, '(SINCE "'+self.since_date(days)+'")', 'UNSEEN')
-        list = d[0].split(' ')
+        list = d[0].split()
         return list
 
     def unreadIdsToday(self):
@@ -121,17 +121,18 @@ class Outlook():
 
     def allIds(self):
         r, d = self.imap.search(None, "ALL")
-        list = d[0].split(' ')
+        list = d[0].split()
+        print(list)
         return list
 
     def readIds(self):
         r, d = self.imap.search(None, "SEEN")
-        list = d[0].split(' ')
+        list = d[0].split()
         return list
 
     def unreadIds(self):
         r, d = self.imap.search(None, "UNSEEN")
-        list = d[0].split(' ')
+        list = d[0].split()
         return list
 
     def hasUnread(self):
@@ -147,15 +148,17 @@ class Outlook():
         return stack
 
     def getEmail(self, id):
-        r, d = self.imap.fetch(id, "(RFC822)")
+        r, d = self.imap.fetch(id, "(RFC822.TEXT)")
         self.raw_email = d[0][1]
-        self.email_message = email.message_from_string(self.raw_email)
+        self.email_message = email.message_from_string(self.raw_email.decode("gb18030"))
         return self.email_message
 
     def unread(self):
         list = self.unreadIds()
-        latest_id = list[-1]
-        return self.getEmail(latest_id)
+        if len(list)>0:
+            latest_id = list[-1]
+            return self.getEmail(latest_id)
+        return 0
 
     def read(self):
         list = self.readIds()
