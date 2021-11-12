@@ -1,3 +1,5 @@
+# now is py3.8 updata！
+it was 3 year not hava updateed 
 # Python Outlook (Microsoft email service) Library
 Python Library to read email from live, hotmail, outlook or any microsoft email service, just dowload to yout python script folder. This library using Imaplib python to read email with IMAP protocol.
 ## Prerequisite Libraries
