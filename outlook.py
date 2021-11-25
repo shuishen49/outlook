@@ -137,7 +137,13 @@ class Outlook():
 
     def hasUnread(self):
         list = self.unreadIds()
-        return list != ['']
+        print(list)
+        if len(list)>0:
+            latest_id = list[-1]
+           ##有些邮件不会自动设置为已读，需要手动设置
+            self.imap.store(latest_id,'+FLAGS','\\seen')
+            return self.getEmail(latest_id)
+        return 0
 
     def getIdswithWord(self, ids, word):
         stack = []
