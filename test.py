@@ -4,7 +4,7 @@ import outlook
 
 user="youer@email.com"
 mima="youerpass"
-mail = outlook.Outlook()
+mail = outlook.Outlook(user)
 if_login=mail.login(user,mima)
 # print(mail.unread())
 # s=mail.getEmail('2')
