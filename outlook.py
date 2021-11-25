@@ -3,12 +3,19 @@ import imaplib
 import smtplib
 import datetime
 import email.mime.multipart
-import config
+from config import config
 import base64
 
 
 class Outlook():
-    def __init__(self):
+    def __init__(self,username):
+        self.config= config(username)
+        self.imap_server=self.config.imap_server
+        self.imap_port=self.config.imap_port
+
+        self.smtp_server=self.config.smtp_server
+        self.smtp_port=self.config.smtp_port
+
         pass
         # self.imap = imaplib.IMAP4_SSL('imap-mail.outlook.com')
         # self.smtp = smtplib.SMTP('smtp-mail.outlook.com')
@@ -19,7 +26,7 @@ class Outlook():
         login_attempts = 0
         while True:
             try:
-                self.imap = imaplib.IMAP4_SSL(config.imap_server,config.imap_port)
+                self.imap = imaplib.IMAP4_SSL(self.imap_server,self.imap_port)
                 r, d = self.imap.login(username, password)
                 assert r == 'OK', 'login failed: %s' % str (r)
                 # print(" > Signed in as %s" % self.username, d)
@@ -40,7 +47,7 @@ class Outlook():
         # headers = "\r\n".join(["from: " + "sms@kitaklik.com","subject: " + subject,"to: " + recipient,"mime-version: 1.0","content-type: text/html"])
         # content = headers + "\r\n\r\n" + message
         try:
-            self.smtp = smtplib.SMTP(config.smtp_server, config.smtp_port)
+            self.smtp = smtplib.SMTP(self.smtp_server, self.smtp_port)
             self.smtp.ehlo()
             self.smtp.starttls()
             self.smtp.login(self.username, self.password)
@@ -61,7 +68,7 @@ class Outlook():
         attempts = 0
         while True:
             try:
-                self.smtp = smtplib.SMTP(config.smtp_server, config.smtp_port)
+                self.smtp = smtplib.SMTP(self.smtp_server, self.smtp_port)
                 self.smtp.ehlo()
                 self.smtp.starttls()
                 self.smtp.login(self.username, self.password)
@@ -85,6 +92,9 @@ class Outlook():
     def inbox(self):
         return self.imap.select("Inbox")
 
+    def spam(self):
+        return self.imap.select("Spam")
+
     def junk(self):
         return self.imap.select("Junk")
 
@@ -97,7 +107,7 @@ class Outlook():
 
     def allIdsSince(self, days):
         r, d = self.imap.search(None, '(SINCE "'+self.since_date(days)+'")', 'ALL')
-        list = d[0].split()
+        list = d[0].split(' ')
         return list
 
     def allIdsToday(self):
@@ -105,7 +115,7 @@ class Outlook():
 
     def readIdsSince(self, days):
         r, d = self.imap.search(None, '(SINCE "'+self.date_since(days)+'")', 'SEEN')
-        list = d[0].split()
+        list = d[0].split(' ')
         return list
 
     def readIdsToday(self):
@@ -121,13 +131,15 @@ class Outlook():
 
     def allIds(self):
         r, d = self.imap.search(None, "ALL")
+        print(d)
+        print(d[0])
         list = d[0].split()
         print(list)
         return list
 
     def readIds(self):
         r, d = self.imap.search(None, "SEEN")
-        list = d[0].split()
+        list = d[0].split(' ')
         return list
 
     def unreadIds(self):
@@ -137,13 +149,7 @@ class Outlook():
 
     def hasUnread(self):
         list = self.unreadIds()
-        print(list)
-        if len(list)>0:
-            latest_id = list[-1]
-           ##有些邮件不会自动设置为已读，需要手动设置
-            self.imap.store(latest_id,'+FLAGS','\\seen')
-            return self.getEmail(latest_id)
-        return 0
+        return list != ['']
 
     def getIdswithWord(self, ids, word):
         stack = []
@@ -161,8 +167,10 @@ class Outlook():
 
     def unread(self):
         list = self.unreadIds()
+        print(list)
         if len(list)>0:
             latest_id = list[-1]
+            self.imap.store(latest_id,'+FLAGS','\\seen')
             return self.getEmail(latest_id)
         return 0
 
@@ -178,6 +186,8 @@ class Outlook():
 
     def unreadToday(self):
         list = self.unreadIdsToday()
+        print(list)
+        print(list[-1])
         latest_id = list[-1]
         return self.getEmail(latest_id)
 
@@ -235,3 +245,6 @@ class Outlook():
 
     def mailbodydecoded(self):
         return base64.urlsafe_b64decode(self.mailbody())
+
+    def uid(self, command, *args):
+        return self.imap.uid(self, command, *args)
