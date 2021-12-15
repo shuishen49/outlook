@@ -1,3 +1,5 @@
+#增加了多种邮箱的支持
+包括ru，gmx，163和hotmaill，等其他默认邮箱自动收发邮件
 # now is py3.8 updata！
 it was 3 year not hava updateed 
 # Python Outlook (Microsoft email service) Library
